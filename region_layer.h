@@ -41,7 +41,7 @@ typedef struct
     float **probs;
 } region_layer_t;
 
-typedef void(*callback_draw_box)(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t class, float prob);
+typedef void(*callback_draw_box)(uint32_t x1, uint32_t y1, uint32_t x2, uint32_t y2, uint32_t class, float prob);//44
 
 int region_layer_init(region_layer_t *rl, int width, int height, int channels, int origin_width, int origin_height);
 void region_layer_deinit(region_layer_t *rl);
