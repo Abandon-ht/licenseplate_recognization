@@ -31,7 +31,7 @@
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define KMODEL_SIZE (300 * 1024)//30
+#define KMODEL_SIZE (1500 * 1024)//30
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -41,7 +41,7 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-INCBIN(detect, "detect1.kmodel");//37
+INCBIN(detect, "test.kmodel");//37
 #endif
 
 
