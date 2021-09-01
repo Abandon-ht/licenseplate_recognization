@@ -600,6 +600,7 @@ int main(void)
         while(!g_ai_done_flag);
         float *output;
         size_t output_size;
+
         /* run obj output */
 //        kpu_get_output(&obj_detect_task, 0, (uint8_t **)&output, &output_size);//400
 //        obj_detect_rl.input = output;//401
