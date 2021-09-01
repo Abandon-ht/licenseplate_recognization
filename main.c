@@ -102,9 +102,9 @@ static void io_mux_init(void)
 	fpioa_set_function(LCD_DC_PIN, FUNC_GPIOHS0 + LCD_DC_IO);
 	fpioa_set_function(LCD_CS_PIN, FUNC_SPI0_SS3);
 	fpioa_set_function(LCD_RW_PIN, FUNC_SPI0_SCLK);
-    fpioa_set_function(LCD_BLIGHT_PIN, FUNC_GPIOHS0 + LCD_BLIGHT_IO);
-    gpiohs_set_drive_mode(LCD_BLIGHT_IO, GPIO_DM_OUTPUT);
-    gpiohs_set_pin(LCD_BLIGHT_IO, GPIO_PV_LOW);
+	fpioa_set_function(LCD_BLIGHT_PIN, FUNC_GPIOHS0 + LCD_BLIGHT_IO);
+	gpiohs_set_drive_mode(LCD_BLIGHT_IO, GPIO_DM_OUTPUT);
+	gpiohs_set_pin(LCD_BLIGHT_IO, GPIO_PV_LOW);
 
 	fpioa_set_function(LCD_RST_PIN, FUNC_GPIOHS0 + LCD_RST_IO);
 	gpiohs_set_drive_mode(LCD_RST_IO, GPIO_DM_OUTPUT);
