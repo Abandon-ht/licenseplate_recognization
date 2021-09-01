@@ -31,7 +31,7 @@
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define KMODEL_SIZE (1500 * 1024)//30
+#define DETECT_SIZE (1500 * 1024)//30
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
