@@ -135,21 +135,21 @@ static void io_mux_init(void)
 	gpiohs_set_pin(LCD_RST_IO, GPIO_PV_HIGH);
 
 #elif (BOARD_VERSION == BOARD_KD233)
-    /* Init DVP IO map and function settings */
-    fpioa_set_function(DVP_RST_PIN, FUNC_CMOS_RST);
-    fpioa_set_function(DVP_PWDN_PIN, FUNC_CMOS_PWDN);
-    fpioa_set_function(DVP_XCLK_PIN, FUNC_CMOS_XCLK);
-    fpioa_set_function(DVP_VSYNC_PIN, FUNC_CMOS_VSYNC);
-    fpioa_set_function(DVP_HREF_PIN, FUNC_CMOS_HREF);
-    fpioa_set_function(DVP_PCLK_PIN, FUNC_CMOS_PCLK);
-    fpioa_set_function(DVP_SCCB_SCLK_PIN, FUNC_SCCB_SCLK);
-    fpioa_set_function(DVP_SCCB_SDA_PIN, FUNC_SCCB_SDA);
-    sysctl_set_spi0_dvp_data(1);
+	/* Init DVP IO map and function settings */
+	fpioa_set_function(DVP_RST_PIN, FUNC_CMOS_RST);
+	fpioa_set_function(DVP_PWDN_PIN, FUNC_CMOS_PWDN);
+	fpioa_set_function(DVP_XCLK_PIN, FUNC_CMOS_XCLK);
+	fpioa_set_function(DVP_VSYNC_PIN, FUNC_CMOS_VSYNC);
+	fpioa_set_function(DVP_HREF_PIN, FUNC_CMOS_HREF);
+	fpioa_set_function(DVP_PCLK_PIN, FUNC_CMOS_PCLK);
+	fpioa_set_function(DVP_SCCB_SCLK_PIN, FUNC_SCCB_SCLK);
+	fpioa_set_function(DVP_SCCB_SDA_PIN, FUNC_SCCB_SDA);
+	sysctl_set_spi0_dvp_data(1);
 
-    /* Init SPI IO map and function settings */
-    fpioa_set_function(LCD_DC_PIN, FUNC_GPIOHS0 + LCD_DC_IO);
-    fpioa_set_function(LCD_CS_PIN, FUNC_SPI0_SS3);
-    fpioa_set_function(LCD_RW_PIN, FUNC_SPI0_SCLK);
+	/* Init SPI IO map and function settings */
+	fpioa_set_function(LCD_DC_PIN, FUNC_GPIOHS0 + LCD_DC_IO);
+	fpioa_set_function(LCD_CS_PIN, FUNC_SPI0_SS3);
+	fpioa_set_function(LCD_RW_PIN, FUNC_SPI0_SCLK);
 
 #endif
 }
@@ -170,10 +170,10 @@ static void io_set_power(void)
 	sysctl_set_power_mode(SYSCTL_POWER_BANK7, SYSCTL_POWER_V18);
 
 #elif 	(BOARD_VERSION == BOARD_KD233)
-    /* Set dvp and spi pin to 1.8V */
-    sysctl_set_power_mode(SYSCTL_POWER_BANK0, SYSCTL_POWER_V18);
-    sysctl_set_power_mode(SYSCTL_POWER_BANK1, SYSCTL_POWER_V18);
-    sysctl_set_power_mode(SYSCTL_POWER_BANK2, SYSCTL_POWER_V18);
+	/* Set dvp and spi pin to 1.8V */
+	sysctl_set_power_mode(SYSCTL_POWER_BANK0, SYSCTL_POWER_V18);
+	sysctl_set_power_mode(SYSCTL_POWER_BANK1, SYSCTL_POWER_V18);
+	sysctl_set_power_mode(SYSCTL_POWER_BANK2, SYSCTL_POWER_V18);
 #endif
 }
 
