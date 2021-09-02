@@ -73,6 +73,56 @@ malloc_error:
     return flag;
 }
 
+int region_layer_init1(region_layer_t *rl, int width, int height, int channels, int origin_width, int origin_height)
+{
+    int flag = 0;
+
+    rl->coords = 4;
+    rl->image_width = 320;
+    rl->image_height = 240;
+
+    rl->net_width = origin_width;
+    rl->net_height = origin_height;
+    rl->layer_width = width;
+    rl->layer_height = height;
+    rl->boxes_number = (rl->layer_width * rl->layer_height * rl->anchor_number);
+    rl->output_number = (rl->boxes_number * (rl->classes + rl->coords + 1));
+
+    rl->output = malloc(rl->output_number * sizeof(float));
+    if (rl->output == NULL)
+    {
+        flag = -1;
+        goto malloc_error;
+    }
+    rl->boxes = malloc(rl->boxes_number * sizeof(box_t));
+    if (rl->boxes == NULL)
+    {
+        flag = -2;
+        goto malloc_error;
+    }
+    rl->probs_buf = malloc(rl->boxes_number * (rl->classes + 1) * sizeof(float));
+    if (rl->probs_buf == NULL)
+    {
+        flag = -3;
+        goto malloc_error;
+    }
+    rl->probs = malloc(rl->boxes_number * sizeof(float *));
+    if (rl->probs == NULL)
+    {
+        flag = -4;
+        goto malloc_error;
+    }
+    for (uint32_t i = 0; i < rl->boxes_number; i++)
+        rl->probs[i] = &(rl->probs_buf[i * (rl->classes + 1)]);
+    return 0;
+malloc_error:
+    free(rl->output);
+    free(rl->boxes);
+    free(rl->probs_buf);
+    free(rl->probs);
+    return flag;
+}
+
 void region_layer_deinit(region_layer_t *rl)
 {
     free(rl->output);
@@ -103,6 +153,15 @@ static int entry_index(region_layer_t *rl, int location, int entry)
 
     //return n * wh * (rl->coords + rl->classes + 1) + entry * wh + loc;
     return n * wh * (rl->coords + 1) + entry * wh + loc;
+}
+
+static int entry_index1(region_layer_t *rl, int location, int entry)
+{
+    int wh = rl->layer_width * rl->layer_height;
+    int n   = location / wh;
+    int loc = location % wh;
+
+    return n * wh * (rl->coords + rl->classes + 1) + entry * wh + loc;
 }
 
 static void softmax(region_layer_t *rl, float *input, int n, int stride, float *output)
@@ -157,6 +216,27 @@ static void forward_region_layer(region_layer_t *rl)
     index = entry_index(rl, 0, rl->coords + 1);
     //softmax_cpu(rl, rl->input + index, rl->classes, rl->anchor_number,
     softmax_cpu(rl, rl->input + index, 0, rl->anchor_number,
+            rl->output_number / rl->anchor_number, rl->layer_width * rl->layer_height,
+            rl->layer_width * rl->layer_height, rl->output + index);
+}
+
+static void forward_region_layer1(region_layer_t *rl)
+{
+    int index;
+
+    for (index = 0; index < rl->output_number; index++)
+        rl->output[index] = rl->input[index];
+
+    for (int n = 0; n < rl->anchor_number; ++n)
+    {
+        index = entry_index1(rl, n * rl->layer_width * rl->layer_height, 0);
+        activate_array(rl, index, 2 * rl->layer_width * rl->layer_height);
+        index = entry_index1(rl, n * rl->layer_width * rl->layer_height, 4);
+        activate_array(rl, index, rl->layer_width * rl->layer_height);
+    }
+
+    index = entry_index1(rl, 0, rl->coords + 1);
+    softmax_cpu(rl, rl->input + index, rl->classes, rl->anchor_number,
             rl->output_number / rl->anchor_number, rl->layer_width * rl->layer_height,
             rl->layer_width * rl->layer_height, rl->output + index);
 }
@@ -255,12 +335,69 @@ static void get_region_boxes(region_layer_t *rl, float *predictions, float **pro
     correct_region_boxes(rl, boxes);
 }
 
+static void get_region_boxes1(region_layer_t *rl, float *predictions, float **probs, box_t *boxes)
+{
+    uint32_t layer_width = rl->layer_width;
+    uint32_t layer_height = rl->layer_height;
+    uint32_t anchor_number = rl->anchor_number;
+    uint32_t classes = rl->classes;
+    uint32_t coords = rl->coords;
+    float threshold = rl->threshold;
+
+    for (int i = 0; i < layer_width * layer_height; ++i)
+    {
+        int row = i / layer_width;
+        int col = i % layer_width;
+
+        for (int n = 0; n < anchor_number; ++n)
+        {
+            int index = n * layer_width * layer_height + i;
+
+            for (int j = 0; j < classes; ++j)
+                probs[index][j] = 0;
+            int obj_index = entry_index1(rl, n * layer_width * layer_height + i, coords);
+            int box_index = entry_index1(rl, n * layer_width * layer_height + i, 0);
+            float scale  = predictions[obj_index];
+
+            boxes[index] = get_region_box(predictions, rl->anchor, n, box_index, col, row,
+                layer_width, layer_height, layer_width * layer_height);
+
+            float max = 0;
+
+            for (int j = 0; j < classes; ++j)
+            {
+                int class_index = entry_index1(rl, n * layer_width * layer_height + i, coords + 1 + j);
+                float prob = scale * predictions[class_index];
+
+                probs[index][j] = (prob > threshold) ? prob : 0;
+                if (prob > max)
+                    max = prob;
+            }
+            probs[index][classes] = max;
+        }
+    }
+    correct_region_boxes(rl, boxes);
+}
+
 static int nms_comparator(void *pa, void *pb)
 {
     sortable_box_t a = *(sortable_box_t *)pa;
     sortable_box_t b = *(sortable_box_t *)pb;
     //float diff = a.probs[a.index][b.class] - b.probs[b.index][b.class];
     float diff = a.probs[a.index][0] - b.probs[b.index][0];
+
+    if (diff < 0)
+        return 1;
+    else if (diff > 0)
+        return -1;
+    return 0;
+}
+
+static int nms_comparator1(void *pa, void *pb)
+{
+    sortable_box_t a = *(sortable_box_t *)pa;
+    sortable_box_t b = *(sortable_box_t *)pb;
+    float diff = a.probs[a.index][b.class] - b.probs[b.index][b.class];
 
     if (diff < 0)
         return 1;
@@ -342,6 +479,43 @@ static void do_nms_sort(region_layer_t *rl, box_t *boxes, float **probs)
     }
 }
 
+static void do_nms_sort1(region_layer_t *rl, box_t *boxes, float **probs)
+{
+    uint32_t boxes_number = rl->boxes_number;
+    uint32_t classes = rl->classes;
+    float nms_value = rl->nms_value;
+    int i, j, k;
+    sortable_box_t s[boxes_number];
+
+    for (i = 0; i < boxes_number; ++i)
+    {
+        s[i].index = i;
+        s[i].class = 0;
+        s[i].probs = probs;
+    }
+
+    for (k = 0; k < classes; ++k)
+    {
+        for (i = 0; i < boxes_number; ++i)
+            s[i].class = k;
+        qsort(s, boxes_number, sizeof(sortable_box_t), nms_comparator1);
+        for (i = 0; i < boxes_number; ++i)
+        {
+            if (probs[s[i].index][k] == 0)
+                continue;
+            box_t a = boxes[s[i].index];
+
+            for (j = i + 1; j < boxes_number; ++j)
+            {
+                box_t b = boxes[s[j].index];
+
+                if (box_iou(a, b) > nms_value)
+                    probs[s[j].index][k] = 0;
+            }
+        }
+    }
+}
+
 static int max_index(float *a, int n)
 {
     int i, max_i = 0;
@@ -393,6 +567,14 @@ void region_layer_run(region_layer_t *rl, obj_info_t *obj_info)
     get_region_boxes(rl, rl->output, rl->probs, rl->boxes);
     do_nms_sort(rl, rl->boxes, rl->probs);
     region_layer_output(rl, obj_info);
+}
+
+void region_layer_run1(region_layer_t *rl, obj_info_t *obj_info)
+{
+    forward_region_layer1(rl);
+    get_region_boxes1(rl, rl->output, rl->probs, rl->boxes);
+    do_nms_sort1(rl, rl->boxes, rl->probs);
+    // region_layer_output(rl, obj_info);
 }
 
 void region_layer_draw_boxes(region_layer_t *rl, callback_draw_box callback)//382

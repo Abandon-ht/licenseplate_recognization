@@ -31,7 +31,7 @@
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define DETECT_SIZE (1500 * 1024)//30
+#define DETECT_SIZE (1501 * 1024)//30
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -563,7 +563,7 @@ int main(void)
     obj_detect_rl.threshold = 0.5;
     obj_detect_rl.nms_value = 0.2;
 	obj_detect_rl.classes = CLASS_NUMBER;
-    region_layer_init(&obj_detect_rl, 10, 8, 125, kpu_image.width, kpu_image.height);
+    region_layer_init1(&obj_detect_rl, 10, 8, 125, kpu_image.width, kpu_image.height);
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -588,26 +588,26 @@ int main(void)
 		}
 
         /* run obj detect */
-//		memset(kpu_od_image.addr, 127, kpu_od_image.pixel * kpu_od_image.width * kpu_od_image.height);//390
-//		for (uint32_t cc = 0; cc < kpu_od_image.pixel; cc++)
-//		{
-//			memcpy(kpu_od_image.addr + kpu_od_image.width * (cc * kpu_od_image.height + (kpu_od_image.height - kpu_image.height) / 2), kpu_image.addr + cc * kpu_image.width * kpu_image.height, kpu_image.width * kpu_image.height);
-//		}//394
+		memset(kpu_od_image.addr, 127, kpu_od_image.pixel * kpu_od_image.width * kpu_od_image.height);//390
+		for (uint32_t cc = 0; cc < kpu_od_image.pixel; cc++)
+		{
+			memcpy(kpu_od_image.addr + kpu_od_image.width * (cc * kpu_od_image.height + (kpu_od_image.height - kpu_image.height) / 2), kpu_image.addr + cc * kpu_image.width * kpu_image.height, kpu_image.width * kpu_image.height);
+		}//394
 
         g_ai_done_flag = 0;
         kpu_run_kmodel(&lp_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);
-//        kpu_run_kmodel(&obj_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);//396
+        kpu_run_kmodel(&obj_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);//396
         while(!g_ai_done_flag);
         float *output;
         size_t output_size;
 
         /* run obj output */
-//        kpu_get_output(&obj_detect_task, 0, (uint8_t **)&output, &output_size);//400
-//        obj_detect_rl.input = output;//401
-//        region_layer_run(&obj_detect_rl, &obj_detect_info);//402
-//		/* display pic*/
-//		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
-//		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
+        kpu_get_output(&obj_detect_task, 0, (uint8_t **)&output, &output_size);//400
+        obj_detect_rl.input = output;//401
+        region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
+		/* display pic*/
+		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
+		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
 
         /* run lp output */
         kpu_get_output(&lp_detect_task, 0, (uint8_t **)&output, &output_size);
