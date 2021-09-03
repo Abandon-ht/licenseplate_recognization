@@ -31,7 +31,7 @@
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define DETECT_SIZE (1501 * 1024)//30
+#define DETECT_SIZE (300 * 1024)//30
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -41,7 +41,7 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-INCBIN(detect, "test.kmodel");//37
+INCBIN(detect, "detect1.kmodel");//37
 #endif
 
 
@@ -606,7 +606,7 @@ int main(void)
         obj_detect_rl.input = output;//401
         region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
 		/* display pic*/
-		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
+//		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
 		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
 
         /* run lp output */
