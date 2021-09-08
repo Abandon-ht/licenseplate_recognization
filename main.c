@@ -31,7 +31,7 @@
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define DETECT_SIZE (543 * 1024)//30
+#define DETECT_SIZE (1501 * 1024)//30
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -41,8 +41,8 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-//INCBIN(detect, "test.kmodel");//37
-INCBIN(detect, "mask.kmodel");//37
+INCBIN(detect, "test.kmodel");//37
+//INCBIN(detect, "face.kmodel");//37
 #endif
 
 
@@ -62,8 +62,8 @@ static obj_info_t obj_detect_info;//46
 #define ANCHOR_NUM 5
 static float anchor[ANCHOR_NUM * 2] = {8.30891522166988, 2.75630994889035, 5.18609903718768, 1.7863757404970702, 6.91480529053198, 3.825771881004435, 10.218567655549439, 3.69476690620971, 6.4088204258368195, 2.38813526350986};
 //#define ANCHOR_NUM 5
-//static float anchor1[ANCHOR_NUM * 2] = {1.3221, 1.73145, 3.19275, 4.00944, 5.05587, 8.09892, 9.47112, 4.84053, 11.2364, 10.0071};
-static float anchor1[ANCHOR_NUM * 2] = {0.156250, 0.222548,0.361328, 0.489583,0.781250, 0.983133,1.621094, 1.964286,3.574219, 3.940000};
+static float anchor1[ANCHOR_NUM * 2] = {1.3221, 1.73145, 3.19275, 4.00944, 5.05587, 8.09892, 9.47112, 4.84053, 11.2364, 10.0071};
+//static float anchor1[ANCHOR_NUM * 2] = {1.889,2.5245,  2.9465,3.94056, 3.99987,5.3658, 5.155437,6.92275, 6.718375,9.01025};
 
 static void ai_done(void *ctx)
 {
@@ -193,24 +193,24 @@ class_lable_t class_lable[CLASS_NUMBER] =//176
 {
 	{ "aeroplane", NAVY },
 	{ "bicycle", DARKGREEN },
-//	{ "bird", DARKCYAN },
-//	{ "boat", MAROON },
-//	{ "bottle", PURPLE },
-//	{ "bus", LIGHTGREY },
-//	{ "car", DARKGREY },
-//	{ "cat", BLUE },
-//	{ "chair", RED },
-//	{ "cow", GREEN },
-//	{ "diningtable", WHITE },
-//	{ "dog", RED },
-//	{ "horse", MAGENTA },
-//	{ "motorbike", YELLOW },
-//	{ "person", CYAN },
-//	{ "pottedplant", ORANGE },
-//	{ "sheep", GREENYELLOW },
-//	{ "sofa", PINK },
-//	{ "train", USER_COLOR },
-//	{ "tvmonitor", NAVY }
+	{ "bird", DARKCYAN },
+	{ "boat", MAROON },
+	{ "bottle", PURPLE },
+	{ "bus", LIGHTGREY },
+	{ "car", DARKGREY },
+	{ "cat", BLUE },
+	{ "chair", RED },
+	{ "cow", GREEN },
+	{ "diningtable", WHITE },
+	{ "dog", RED },
+	{ "horse", MAGENTA },
+	{ "motorbike", YELLOW },
+	{ "person", CYAN },
+	{ "pottedplant", ORANGE },
+	{ "sheep", GREENYELLOW },
+	{ "sofa", PINK },
+	{ "train", USER_COLOR },
+	{ "tvmonitor", NAVY }
 };
 
 static uint32_t lable_string_draw_ram[115 * 16 * 8 / 2];//200
@@ -474,7 +474,7 @@ int main(void)
 #if LOAD_KMODEL_FROM_FLASH
     w25qxx_read_data(0xA00000, model_data, KMODEL_SIZE, W25QXX_QUAD_FAST);
     w25qxx_read_data(0xB00000, recog_data, RECOG_SIZE, W25QXX_QUAD_FAST);
-    w25qxx_read_data(0xC00000, model_data_align, DETECT_SIZE, W25QXX_QUAD_FAST);//309
+    w25qxx_read_data(0xC00000, detect_data, DETECT_SIZE, W25QXX_QUAD_FAST);//309
 #endif
     /* LCD init */
     printf("LCD init\n");
@@ -565,7 +565,7 @@ int main(void)
     obj_detect_rl.threshold = 0.5;
     obj_detect_rl.nms_value = 0.2;
 	obj_detect_rl.classes = CLASS_NUMBER;
-    region_layer_init1(&obj_detect_rl, 10, 8, 35, kpu_image.width, kpu_image.height);
+    region_layer_init1(&obj_detect_rl, 10, 8, 30, kpu_image.width, kpu_image.height);
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -597,8 +597,8 @@ int main(void)
 		}//394
 
         g_ai_done_flag = 0;
+        kpu_run_kmodel(&obj_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);//396
         kpu_run_kmodel(&lp_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);
-//        kpu_run_kmodel(&obj_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);//396
         while(!g_ai_done_flag);
         float *output;
         size_t output_size;
