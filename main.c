@@ -23,15 +23,16 @@
 #include "board_config.h"
 #include "fully.h"
 
-#define LOAD_KMODEL_FROM_FLASH  0
-#define 	CLASS_NUMBER 20//26
+#define     LOAD_KMODEL_FROM_FLASH  0
+#define 	CLASS_NUMBER 10//26
 
 #if LOAD_KMODEL_FROM_FLASH
 #define KMODEL_SIZE (500 * 1024)
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-#define DETECT_SIZE (1501 * 1024)//30
+//#define DETECT_SIZE (1501 * 1024)//30
+#define DETECT_SIZE (1000 * 1024)
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -41,8 +42,8 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-INCBIN(detect, "test.kmodel");//37
-//INCBIN(detect, "face.kmodel");//37
+//INCBIN(detect, "test.kmodel");//37
+INCBIN(detect, "voc_10.kmodel");//37
 #endif
 
 
@@ -62,9 +63,9 @@ static obj_info_t obj_detect_info;//46
 #define ANCHOR_NUM 5
 static float anchor[ANCHOR_NUM * 2] = {8.30891522166988, 2.75630994889035, 5.18609903718768, 1.7863757404970702, 6.91480529053198, 3.825771881004435, 10.218567655549439, 3.69476690620971, 6.4088204258368195, 2.38813526350986};
 //#define ANCHOR_NUM 5
-static float anchor1[ANCHOR_NUM * 2] = {1.3221, 1.73145, 3.19275, 4.00944, 5.05587, 8.09892, 9.47112, 4.84053, 11.2364, 10.0071};
+//static float anchor1[ANCHOR_NUM * 2] = {1.3221, 1.73145, 3.19275, 4.00944, 5.05587, 8.09892, 9.47112, 4.84053, 11.2364, 10.0071};
 //static float anchor1[ANCHOR_NUM * 2] = {1.889,2.5245,  2.9465,3.94056, 3.99987,5.3658, 5.155437,6.92275, 6.718375,9.01025};
-
+static float anchor1[ANCHOR_NUM * 2] = {0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828};
 static void ai_done(void *ctx)
 {
     g_ai_done_flag = 1;
@@ -192,26 +193,29 @@ typedef struct//166
 class_lable_t class_lable[CLASS_NUMBER] =//176
 {
 	{ "aeroplane", NAVY },
-	{ "bicycle", DARKGREEN },
+//	{ "bicycle", DARKGREEN },
 	{ "bird", DARKCYAN },
 	{ "boat", MAROON },
 	{ "bottle", PURPLE },
 	{ "bus", LIGHTGREY },
-	{ "car", DARKGREY },
-	{ "cat", BLUE },
-	{ "chair", RED },
+//	{ "car", DARKGREY },
+//	{ "cat", BLUE },
+//	{ "chair", RED },
 	{ "cow", GREEN },
 	{ "diningtable", WHITE },
-	{ "dog", RED },
-	{ "horse", MAGENTA },
-	{ "motorbike", YELLOW },
+//	{ "dog", RED },
+//	{ "horse", MAGENTA },
+//	{ "motorbike", YELLOW },
 	{ "person", CYAN },
-	{ "pottedplant", ORANGE },
+//	{ "pottedplant", ORANGE },
 	{ "sheep", GREENYELLOW },
-	{ "sofa", PINK },
+//	{ "sofa", PINK },
 	{ "train", USER_COLOR },
-	{ "tvmonitor", NAVY }
+//	{ "tvmonitor", NAVY }
+//	{ "no_mask", NAVY },
+//	{ "mask", DARKGREEN }
 };
+//        "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
 
 static uint32_t lable_string_draw_ram[115 * 16 * 8 / 2];//200
 
@@ -456,6 +460,61 @@ static void draw_edge(uint32_t *gram, obj_info_t *obj_info, uint32_t index, uint
     }
 }
 
+//static void draw_edge(uint32_t *gram, obj_info_t *obj_info, uint32_t index, uint16_t color)
+//{
+//    uint32_t data = ((uint32_t)color << 16) | (uint32_t)color;
+//    uint32_t *addr1, *addr2, *addr3, *addr4, x1, y1, x2, y2;
+//
+//    x1 = obj_info->obj[index].x1;
+//    y1 = obj_info->obj[index].y1;
+//    x2 = obj_info->obj[index].x2;
+//    y2 = obj_info->obj[index].y2;
+//
+//    if (x1 <= 0)
+//        x1 = 1;
+//    if (x2 >= 319)
+//        x2 = 318;
+//    if (y1 <= 0)
+//        y1 = 1;
+//    if (y2 >= 239)
+//        y2 = 238;
+//
+//    addr1 = gram + (320 * y1 + x1) / 2;
+//    addr2 = gram + (320 * y1 + x2 - 8) / 2;
+//    addr3 = gram + (320 * (y2 - 1) + x1) / 2;
+//    addr4 = gram + (320 * (y2 - 1) + x2 - 8) / 2;
+//    for (uint32_t i = 0; i < 4; i++)
+//    {
+//        *addr1 = data;
+//        *(addr1 + 160) = data;
+//        *addr2 = data;
+//        *(addr2 + 160) = data;
+//        *addr3 = data;
+//        *(addr3 + 160) = data;
+//        *addr4 = data;
+//        *(addr4 + 160) = data;
+//        addr1++;
+//        addr2++;
+//        addr3++;
+//        addr4++;
+//    }
+//    addr1 = gram + (320 * y1 + x1) / 2;
+//    addr2 = gram + (320 * y1 + x2 - 2) / 2;
+//    addr3 = gram + (320 * (y2 - 8) + x1) / 2;
+//    addr4 = gram + (320 * (y2 - 8) + x2 - 2) / 2;
+//    for (uint32_t i = 0; i < 8; i++)
+//    {
+//        *addr1 = data;
+//        *addr2 = data;
+//        *addr3 = data;
+//        *addr4 = data;
+//        addr1 += 160;
+//        addr2 += 160;
+//        addr3 += 160;
+//        addr4 += 160;
+//    }
+//}
+
 int main(void)
 {
     /* Set CPU and dvp clk */
@@ -534,8 +593,8 @@ int main(void)
     dvp_set_output_enable(1, 1);
 
 	kpu_od_image.pixel = 3;//359
-	kpu_od_image.width = 320;
-	kpu_od_image.height = 256;
+	kpu_od_image.width = 224;
+	kpu_od_image.height = 224;
 	image_init(&kpu_od_image);//362
 
     /* init lp detect model */
@@ -565,7 +624,7 @@ int main(void)
     obj_detect_rl.threshold = 0.5;
     obj_detect_rl.nms_value = 0.2;
 	obj_detect_rl.classes = CLASS_NUMBER;
-    region_layer_init1(&obj_detect_rl, 10, 8, 30, kpu_image.width, kpu_image.height);
+    region_layer_init1(&obj_detect_rl, 7, 7, 75, kpu_image.width, kpu_image.height);
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -578,7 +637,7 @@ int main(void)
         dvp_config_interrupt(DVP_CFG_START_INT_ENABLE | DVP_CFG_FINISH_INT_ENABLE, 1);
         while (g_dvp_finish_flag == 0)
             ;
-
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         /* run lp detect */
 
 		for(uint32_t cc = 0; cc < kpu_image.pixel; cc++)
@@ -589,27 +648,11 @@ int main(void)
 			}
 		}
 
-        /* run obj detect */
-		memset(kpu_od_image.addr, 127, kpu_od_image.pixel * kpu_od_image.width * kpu_od_image.height);//390
-		for (uint32_t cc = 0; cc < kpu_od_image.pixel; cc++)
-		{
-			memcpy(kpu_od_image.addr + kpu_od_image.width * (cc * kpu_od_image.height + (kpu_od_image.height - kpu_image.height) / 2), kpu_image.addr + cc * kpu_image.width * kpu_image.height, kpu_image.width * kpu_image.height);
-		}//394
-
         g_ai_done_flag = 0;
-        kpu_run_kmodel(&obj_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);//396
         kpu_run_kmodel(&lp_detect_task, kpu_image.addr, DMAC_CHANNEL5, ai_done, NULL);
         while(!g_ai_done_flag);
         float *output;
         size_t output_size;
-
-        /* run obj output */
-        kpu_get_output(&obj_detect_task, 0, (uint8_t **)&output, &output_size);//400
-        obj_detect_rl.input = output;//401
-        region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
-		/* display pic*/
-//		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
-		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
 
         /* run lp output */
         kpu_get_output(&lp_detect_task, 0, (uint8_t **)&output, &output_size);
@@ -631,9 +674,29 @@ int main(void)
 
         /* display result */
         lcd_draw_picture(0, 0, 320, 240, (uint32_t *)display_image.addr);
-//		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
+
         /* run recog and display result */
         for (uint32_t lp_cnt = 0; lp_cnt < lp_detect_info.obj_number; lp_cnt++)
             run_recog(&kpu_image, &lp_detect_info, lp_cnt);
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        /* run obj detect */
+		memset(kpu_od_image.addr, 127, kpu_od_image.pixel * kpu_od_image.width * kpu_od_image.height);//390
+		for (uint32_t cc = 0; cc < kpu_od_image.pixel; cc++)
+		{
+			memcpy(kpu_od_image.addr + kpu_od_image.width * (cc * kpu_od_image.height + (kpu_od_image.height - kpu_image.height) / 2), kpu_image.addr + cc * kpu_image.width * kpu_image.height, kpu_image.width * kpu_image.height);
+		}//394
+		g_ai_done_flag = 0;
+        kpu_run_kmodel(&obj_detect_task, kpu_od_image.addr, DMAC_CHANNEL5, ai_done, NULL);
+        while(!g_ai_done_flag);
+        float *output1;
+        size_t output_size1;
+        kpu_get_output(&obj_detect_task, 0, (uint8_t **)&output1, &output_size1);//400
+        obj_detect_rl.input = output1;//401
+        region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
+		/* display pic*/
+		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
+
+		/* draw boxs */
+		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
     }
 }
