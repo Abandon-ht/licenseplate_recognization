@@ -44,7 +44,6 @@ INCBIN(recog, "recog.kmodel");
 INCBIN(detect, "voc_4.kmodel");//37
 #endif
 
-
 volatile uint32_t g_ai_done_flag;
 volatile uint8_t g_dvp_finish_flag;
 static image_t kpu_image, display_image;
