@@ -614,7 +614,7 @@ int main(void)
         region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
 		/* display pic*/
 		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
-		lcd_draw_picture(0, 0, 224, 224, display_image.addr);
+//		lcd_draw_picture(0, 0, 224, 224, display_image.addr);
 
 		/* draw boxs */
 		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
