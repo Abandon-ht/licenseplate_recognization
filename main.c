@@ -24,15 +24,15 @@
 #include "fully.h"
 
 #define     LOAD_KMODEL_FROM_FLASH  0
-#define 	CLASS_NUMBER 10//26
+#define 	CLASS_NUMBER 4//26
 
 #if LOAD_KMODEL_FROM_FLASH
 #define KMODEL_SIZE (500 * 1024)
 uint8_t model_data[KMODEL_SIZE];
 #define RECOG_SIZE (700 * 1024)
 uint8_t recog_data[RECOG_SIZE];
-//#define DETECT_SIZE (1501 * 1024)//30
-#define DETECT_SIZE (1000 * 1024)
+#define DETECT_SIZE (1000 * 1024)//30
+//#define DETECT_SIZE (543 * 1024)
 uint8_t detect_data[DETECT_SIZE];//
 #else
 
@@ -42,8 +42,9 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-//INCBIN(detect, "test.kmodel");//37
-INCBIN(detect, "voc_10.kmodel");//37
+//INCBIN(detect, "detect.kmodel");//37
+INCBIN(detect, "voc_4.kmodel");//37
+//INCBIN(detect, "voc_old.kmodel");//37
 #endif
 
 
@@ -65,6 +66,7 @@ static float anchor[ANCHOR_NUM * 2] = {8.30891522166988, 2.75630994889035, 5.186
 //#define ANCHOR_NUM 5
 //static float anchor1[ANCHOR_NUM * 2] = {1.3221, 1.73145, 3.19275, 4.00944, 5.05587, 8.09892, 9.47112, 4.84053, 11.2364, 10.0071};
 //static float anchor1[ANCHOR_NUM * 2] = {1.889,2.5245,  2.9465,3.94056, 3.99987,5.3658, 5.155437,6.92275, 6.718375,9.01025};
+//static float anchor1[ANCHOR_NUM * 2] = {0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828};
 static float anchor1[ANCHOR_NUM * 2] = {0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828};
 static void ai_done(void *ctx)
 {
@@ -192,28 +194,29 @@ typedef struct//166
 
 class_lable_t class_lable[CLASS_NUMBER] =//176
 {
-	{ "aeroplane", NAVY },
-//	{ "bicycle", DARKGREEN },
-	{ "bird", DARKCYAN },
-	{ "boat", MAROON },
-	{ "bottle", PURPLE },
+//	{ "aeroplane", NAVY },
+	{ "bicycle", DARKGREEN },
+//	{ "bird", DARKCYAN },
+//	{ "boat", MAROON },
+//	{ "bottle", PURPLE },
 	{ "bus", LIGHTGREY },
-//	{ "car", DARKGREY },
+	{ "car", DARKGREY },
 //	{ "cat", BLUE },
 //	{ "chair", RED },
-	{ "cow", GREEN },
-	{ "diningtable", WHITE },
+//	{ "cow", GREEN },
+//	{ "diningtable", WHITE },
 //	{ "dog", RED },
 //	{ "horse", MAGENTA },
-//	{ "motorbike", YELLOW },
-	{ "person", CYAN },
+	{ "motorbike", YELLOW },
+//	{ "person", CYAN },
 //	{ "pottedplant", ORANGE },
-	{ "sheep", GREENYELLOW },
+//	{ "sheep", GREENYELLOW },
 //	{ "sofa", PINK },
-	{ "train", USER_COLOR },
+//	{ "train", USER_COLOR },
 //	{ "tvmonitor", NAVY }
 //	{ "no_mask", NAVY },
 //	{ "mask", DARKGREEN }
+//	{ "plate", DARKGREEN }
 };
 //        "labels":               ["aeroplane","person","diningtable","bottle","bird","bus","boat","cow","sheep","train"],
 
@@ -593,8 +596,8 @@ int main(void)
     dvp_set_output_enable(1, 1);
 
 	kpu_od_image.pixel = 3;//359
-	kpu_od_image.width = 224;
-	kpu_od_image.height = 224;
+	kpu_od_image.width = 320;
+	kpu_od_image.height = 240;
 	image_init(&kpu_od_image);//362
 
     /* init lp detect model */
@@ -624,7 +627,8 @@ int main(void)
     obj_detect_rl.threshold = 0.5;
     obj_detect_rl.nms_value = 0.2;
 	obj_detect_rl.classes = CLASS_NUMBER;
-    region_layer_init1(&obj_detect_rl, 7, 7, 75, kpu_image.width, kpu_image.height);
+//    region_layer_init1(&obj_detect_rl, 7, 7, 65, kpu_image.width, kpu_image.height);
+    region_layer_init1(&obj_detect_rl, 7, 7, 45, 224, 224);
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -695,6 +699,7 @@ int main(void)
         region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
 		/* display pic*/
 		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
+		lcd_draw_picture(0, 0, 224, 224, display_image.addr);
 
 		/* draw boxs */
 		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
