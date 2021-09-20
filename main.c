@@ -24,7 +24,7 @@
 #include "fully.h"
 
 #define     LOAD_KMODEL_FROM_FLASH  0
-#define 	CLASS_NUMBER 4//26
+#define 	CLASS_NUMBER 20
 
 #if LOAD_KMODEL_FROM_FLASH
 #define KMODEL_SIZE (500 * 1024)
@@ -41,7 +41,7 @@ uint8_t detect_data[DETECT_SIZE];//
 
 INCBIN(model, "detect.kmodel");
 INCBIN(recog, "recog.kmodel");
-INCBIN(detect, "voc_4.kmodel");//37
+INCBIN(detect, "voc.kmodel");//37
 #endif
 
 volatile uint32_t g_ai_done_flag;
@@ -59,7 +59,7 @@ static obj_info_t lp_detect_info;
 static obj_info_t obj_detect_info;//46
 #define ANCHOR_NUM 5
 static float anchor[ANCHOR_NUM * 2] = {8.30891522166988, 2.75630994889035, 5.18609903718768, 1.7863757404970702, 6.91480529053198, 3.825771881004435, 10.218567655549439, 3.69476690620971, 6.4088204258368195, 2.38813526350986};
-static float anchor1[ANCHOR_NUM * 2] = {0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828};
+static float anchor1[ANCHOR_NUM * 2] = {0.757736, 1.004778, 2.029498, 3.417716, 2.161988, 1.564525, 4.380622, 4.125069, 8.082516, 5.356644};
 static void ai_done(void *ctx)
 {
     g_ai_done_flag = 1;
@@ -186,10 +186,26 @@ typedef struct//166
 
 class_lable_t class_lable[CLASS_NUMBER] =//176
 {
+	{ "aeroplane", NAVY },
 	{ "bicycle", DARKGREEN },
+	{ "bird", DARKCYAN },
+	{ "boat", MAROON },
+	{ "bottle", PURPLE },
 	{ "bus", LIGHTGREY },
 	{ "car", DARKGREY },
-	{ "motorbike", YELLOW }
+	{ "cat", BLUE },
+	{ "chair", RED },
+	{ "cow", GREEN },
+	{ "diningtable", WHITE },
+	{ "dog", RED },
+	{ "horse", MAGENTA },
+	{ "motorbike", YELLOW },
+	{ "person", CYAN },
+	{ "pottedplant", ORANGE },
+	{ "sheep", GREENYELLOW },
+	{ "sofa", PINK },
+	{ "train", USER_COLOR },
+	{ "tvmonitor", NAVY }
 };
 
 static uint32_t lable_string_draw_ram[115 * 16 * 8 / 2];//200
@@ -514,7 +530,7 @@ int main(void)
 
 	kpu_od_image.pixel = 3;//359
 	kpu_od_image.width = 320;
-	kpu_od_image.height = 240;
+	kpu_od_image.height = 256;
 	image_init(&kpu_od_image);//362
 
     /* init lp detect model */
@@ -544,7 +560,7 @@ int main(void)
     obj_detect_rl.threshold = 0.5;
     obj_detect_rl.nms_value = 0.2;
 	obj_detect_rl.classes = CLASS_NUMBER;
-    region_layer_init1(&obj_detect_rl, 7, 7, 45, kpu_od_image.width, kpu_od_image.height);
+    region_layer_init1(&obj_detect_rl, 10, 7, 125, kpu_image.width, kpu_image.height);
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -614,7 +630,6 @@ int main(void)
         region_layer_run1(&obj_detect_rl, &obj_detect_info);//402
 		/* display pic*/
 		lcd_draw_picture(0, 0, 320, 240, display_image.addr);
-//		lcd_draw_picture(0, 0, 224, 224, display_image.addr);
 
 		/* draw boxs */
 		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
