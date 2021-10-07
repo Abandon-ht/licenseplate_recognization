@@ -366,6 +366,7 @@ static void *get_recog_result(const float *features, uint32_t size, char *result
     d7 = decode(max_index);
 
 	sprintf(result, "%s%c%c%c%c%c%c", d1, d2, d3, d4, d5, d6, d7);
+	printf("%s", result);
 }
 
 static void run_recog(image_t *src_image, obj_info_t *obj_info, uint32_t index)
@@ -562,9 +563,9 @@ int main(void)
 	obj_detect_rl.classes = CLASS_NUMBER;
     region_layer_init1(&obj_detect_rl, 10, 7, 125, kpu_image.width, kpu_image.height);
 
-    uint64_t time_last = sysctl_get_time_us();//313
-    uint64_t time_now = sysctl_get_time_us();
-    int time_count = 0;//315
+//    uint64_t time_last = sysctl_get_time_us();//313
+//    uint64_t time_now = sysctl_get_time_us();
+//    int time_count = 0;//315
 
     /* enable global interrupt */
     sysctl_enable_irq();
@@ -637,12 +638,12 @@ int main(void)
 
 		/* draw boxs */
 		region_layer_draw_boxes(&obj_detect_rl, drawboxes);//407
-		time_count ++;//343
-        if(time_count % 100 == 0)
-        {
-            time_now = sysctl_get_time_us();
-            printf("SPF:%fms\n", (time_now - time_last)/1000.0/100);
-            time_last = time_now;//348
-        }
+//		time_count ++;//343
+//        if(time_count % 100 == 0)
+//        {
+//            time_now = sysctl_get_time_us();
+//            printf("SPF:%fms\n", (time_now - time_last)/1000.0/100);
+//            time_last = time_now;//348
+//        }
     }
 }
